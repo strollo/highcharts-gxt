@@ -1,0 +1,102 @@
+<?xml version="1.0"?>
+<project default="distrib" name="org.gxt.adapters.highcharts">
+	<!-- file defaults -->
+	<property name="version" value="1.0.0" />
+	<property name="jarfile" value="${ant.project.name}-${version}.jar" />
+	<property name="root.dir" location="." />
+	<property name="source.dir" value="${root.dir}/src" />
+	<property name="source.tests.dir" value="${root.dir}/samples" />
+	<property name="package.root" value="org.gxt.adapters.highcharts" />
+	
+	<!-- Paths for distribution -->
+	<property name="distrib.dir" location="${root.dir}/distrib" />
+	<property name="distrib.jar.dir" location="${distrib.dir}/lib" />
+	<property name="distrib.license.dir" location="${distrib.dir}/license" />
+	<property name="distrib.doc.dir" location="${distrib.dir}/doc" />
+	<property name="distrib.js.dir" location="${distrib.dir}/js" />
+	
+	<property name="build.class.dir" location="${root.dir}/classes" />
+	<property name="lib.dir" location="${root.dir}/lib" />
+	<property name="java.debug" value="on" />
+	<property name="java.deprecation" value="off" />
+	
+	<target name="distrib" depends="jar,doc">
+		<!-- removes classes folder -->
+		<delete dir="${build.class.dir}" quiet="true"/>
+		
+		<!-- copy readme file -->
+		<copy file=".skeleton/Readme.txt" todir="${distrib.dir}" />
+		
+		<copy file=".skeleton/js/gxt-adapter.js" todir="${distrib.js.dir}" />
+		<copy file=".skeleton/Licence.txt" todir="${distrib.license.dir}" />
+	</target>
+	
+	<target name="build" depends="init">
+		<javac srcdir="${source.dir}" destdir="${build.class.dir}" debug="${java.debug}" deprecation="${java.deprecation}" description="compile classes">
+			<include name="**/*.java" />
+			<classpath>
+				<fileset dir="${lib.dir}">
+					<include name="**/*.jar" />
+				</fileset>
+			</classpath>
+		</javac>
+	</target>
+	
+	<target name="jar" depends="build">
+		<copy todir="${build.class.dir}">
+		     <fileset dir="${source.dir}">
+		     	  <include name="org/**/*.gwt.xml"/>
+		     	  <include name="org/**/*.java"/> <!-- jar comes with sources -->
+		     </fileset>
+		</copy>
+		<jar destfile="${distrib.jar.dir}/${jarfile}" basedir="${build.class.dir}">
+			 <include name="**/*.class" />
+			 <include name="**/*.java" />
+			 <include name="org/**/*.gwt.xml"/>
+		</jar>
+	</target>
+	
+	<target name="clean">
+		<delete dir="${distrib.dir}" quiet="true"/>
+		<delete dir="${build.class.dir}" quiet="true"/>
+	</target>
+	
+	<!-- javadoc tasks -->
+	<target name="doc">
+		<echo message="sources in ${source.dir} and package ${package.root}" />
+		<javadoc 
+			access="public" 
+			author="true" 
+			sourcepath="${source.dir}"
+			packagenames="${package.root}.*"
+			destdir="doc/api" 
+			nodeprecated="false" 
+			nodeprecatedlist="false" 
+			noindex="false" 
+			nonavbar="false" 
+			notree="false"
+			source="1.5"
+			splitindex="true" 
+			use="true" 
+			version="true" 
+			failonerror="false">
+			<classpath>
+				<fileset dir="${lib.dir}">
+					<include name="**/*.jar" />
+				</fileset>
+			</classpath>
+		</javadoc>
+		<move file="doc/api" todir="${distrib.doc.dir}" />
+		<delete dir="doc" quiet="true"/>
+	</target>
+		
+	<target name="init" depends="clean" description="creates build structures">
+		<mkdir dir="${build.class.dir}" />
+		<mkdir dir="${distrib.dir}" />
+		<mkdir dir="${distrib.jar.dir}" />
+		<mkdir dir="${distrib.license.dir}" />
+		<mkdir dir="${distrib.doc.dir}" />
+		<mkdir dir="${distrib.js.dir}" />
+	</target>
+	
+</project>
