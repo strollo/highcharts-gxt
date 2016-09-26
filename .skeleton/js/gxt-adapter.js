@@ -18,6 +18,9 @@ function registerChart(param, useParent) {
 function getParentContainer(chartId) {
 	var chart = getChartById(chartId);
 	try {
+		if (document.getElementById(chart.id.substring(5) + '-frame').parentNode != null) {
+			return document.getElementById(chart.id.substring(5) + '-frame').parentNode;
+		}
 		return document.getElementById(chart.id.substring(5) + '-frame');
 	} catch (e) {
 		return chart.container;
@@ -53,7 +56,7 @@ function getChartById(variable){
 /*
  * The parent can be either param.container or document.documentElement
  */
-function resizeChart(chartID, widthOffset, heightOffset) {
+function autoResizeChart(chartID, widthOffset, heightOffset) {
 	var param = getChartById(chartID);
 	if (param != null) {
 		var swidth = param.parentContainer.clientWidth;
@@ -75,5 +78,12 @@ function resizeChart(chartID, widthOffset, heightOffset) {
 		if (param.legend != null && param.legend.renderLegend != null) {
 			param.legend.renderLegend();
 		}
+	}
+}
+
+function resizeChart(chartID, width, height, widthOffset, heightOffset) {
+	var param = getChartById(chartID);
+	if (param != null) {
+		param.setSize(width - widthOffset, height - heightOffset, 1);
 	}
 }

@@ -106,30 +106,29 @@ public class HighChart extends BoxComponent {
 		public double maxX;
 		public double dataMinX;
 		public double dataMaxX;
-		
+
 		public double minY;
 		public double maxY;
 		public double dataMinY;
 		public double dataMaxY;
 	}
-	
-	
+
 	/**
 	 * Diffent categories of highcharts have been defined from 2.x version.
 	 * There are: HighCharts and, additionally, the HighStock.
+	 * 
 	 * @author daniele
-	 *
+	 * 
 	 */
 	public enum ChartCategory {
-		HIGHCHARTS("Chart"),
-		HIGHSTOCK("StockChart");
-		
+		HIGHCHARTS("Chart"), HIGHSTOCK("StockChart");
+
 		private String jsName = null;
-		
+
 		ChartCategory(String jsName) {
 			this.jsName = jsName;
 		}
-		
+
 		public String getJSName() {
 			return this.jsName;
 		}
@@ -165,14 +164,13 @@ public class HighChart extends BoxComponent {
 		super();
 		this.setMonitorWindowResize(true);
 		this.category = category;
-		this.chartJS = new HighChartJS(
-				category.getJSName(),
-				(id != null) ? id
+		this.chartJS = new HighChartJS(category.getJSName(), (id != null) ? id
 				: IDGen.generateID(ID_LENGTH));
 		super.setId(chartJS.getId() + DIV_ID_SUFFIX);
 	}
 
-	public HighChart(final ChartCategory category, final String id, final ChartType type) {
+	public HighChart(final ChartCategory category, final String id,
+			final ChartType type) {
 		this(category, id);
 		this.setType(type.toString(), false);
 	}
@@ -219,18 +217,19 @@ public class HighChart extends BoxComponent {
 						+ " wheel: " + wheel + " type: " + type);
 			}
 		});
-		
-		 // observe scroll event, so we can offset x and y for tooltip
-        Window.addWindowScrollHandler(new ScrollHandler() {
-                public void onWindowScroll(ScrollEvent event) {
-                        
-                        int scrollLeft = event.getScrollLeft();
-                        int scrollTop = event.getScrollTop();
-                        
-                        // debug
-                        System.out.println("scrollLeft: " + scrollLeft + " scrollTop: " + scrollTop);
-                }
-        });	
+
+		// observe scroll event, so we can offset x and y for tooltip
+		Window.addWindowScrollHandler(new ScrollHandler() {
+			public void onWindowScroll(ScrollEvent event) {
+
+				int scrollLeft = event.getScrollLeft();
+				int scrollTop = event.getScrollTop();
+
+				// debug
+				System.out.println("scrollLeft: " + scrollLeft + " scrollTop: "
+						+ scrollTop);
+			}
+		});
 	}
 
 	/**
@@ -277,6 +276,25 @@ public class HighChart extends BoxComponent {
 	 */
 	public final void injectJS() {
 		this.chartJS.doRender();
+	}
+
+	/**
+	 * This method force the refresh of a chart after its resize.
+	 * It is needed by highstock chart since their size is recalculated
+	 * after parent container resize.
+	 */
+	private void forceRefresh() {
+		synchronized (SYNC_MONITOR) {
+			try {
+				// ensures the highchartsJS is rendered
+				// only once its container is present and rendered.
+				if (this.isRendered) {
+					this.chartJS.doRender();
+				}
+			} catch (Exception e) {
+				GWT.log("During setType", e);
+			}
+		}
 	}
 
 	/**
@@ -356,6 +374,9 @@ public class HighChart extends BoxComponent {
 		super.onResize(width, height);
 		if (this.autoResize && !resizeOnWindow) {
 			this.applyResize();
+		}
+		if (this.category == ChartCategory.HIGHSTOCK) {
+			this.forceRefresh();
 		}
 	}
 
@@ -484,19 +505,24 @@ public class HighChart extends BoxComponent {
 	public final void setHeightOffset(final int heightOffset) {
 		this.chartJS.setHeightOffset(heightOffset);
 	}
-	
+
+	/**
+	 * Used to retrieve the extremes of a selection in a HighStock chart.
+	 * 
+	 * @return
+	 */
 	public final SelectionRange getExtremes() {
 		SelectionRange retval = new SelectionRange();
 		retval.minX = HighStockUtils.getXAxisMin(this.getChartJSId());
 		retval.maxX = HighStockUtils.getXAxisMax(this.getChartJSId());
 		retval.dataMinX = HighStockUtils.getXAxisDataMin(this.getChartJSId());
 		retval.dataMaxX = HighStockUtils.getXAxisDataMax(this.getChartJSId());
-		
+
 		retval.minY = HighStockUtils.getYAxisMin(this.getChartJSId());
 		retval.maxY = HighStockUtils.getYAxisMax(this.getChartJSId());
 		retval.dataMinY = HighStockUtils.getYAxisDataMin(this.getChartJSId());
 		retval.dataMaxY = HighStockUtils.getYAxisDataMax(this.getChartJSId());
-		
+
 		return retval;
 	}
 }
