@@ -1,0 +1,22 @@
+
+1) Packages have been renamed using the following convention:
+ a) packages of the core (the ones not ending with widget.xxx)
+    from:
+    org.gxt.adapters.highcharts
+    become:
+    org.adapters.highcharts
+ b) the ones strictly depending on the UI library used (gwt or gxt), namely widgets
+    from:
+    org.gxt.adapters.highcharts.widgets.xxx
+    become:
+    - for GXT:
+    org.adapters.highcharts.gxt.widgets.xxx
+    - for GWT:
+    org.adapters.highcharts.gwt.widgets.xxx
+
+
+2) Modify the .gwt.xml file replacing:
+   <inherits name='org.gxt.adapters.highcharts.gxthighcharts' />
+   with:
+   <inherits name='org.adapters.highcharts.gxt.gxthighcharts' />
+
