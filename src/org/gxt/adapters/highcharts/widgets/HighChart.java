@@ -30,11 +30,11 @@ import org.gxt.adapters.highcharts.codegen.sections.options.types.ChartType;
 import org.gxt.adapters.highcharts.codegen.types.HighChartJS;
 import org.gxt.adapters.highcharts.codegen.types.SeriesType;
 import org.gxt.adapters.highcharts.codegen.utils.IDGen;
-import com.extjs.gxt.ui.client.widget.BoxComponent;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.DOM;
-import com.google.gwt.user.client.Element;
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.user.client.Timer;
+import com.sencha.gxt.widget.core.client.Component;
 
 /**
  * The wrapper of hicharts.
@@ -85,7 +85,7 @@ import com.google.gwt.user.client.Timer;
  * </pre>
  * @author Daniele Strollo
  */
-public class HighChart extends BoxComponent {
+public class HighChart extends Component {
 	private static final String DIV_ID_SUFFIX = "-frame";
 	private HighChartJS chartJS = null;
 	private int resizeDelay = 1000;
@@ -108,6 +108,11 @@ public class HighChart extends BoxComponent {
 		super();
 		this.setMonitorWindowResize(true);
 		this.chartJS = new HighChartJS((id != null) ? id : IDGen.generateID(ID_LENGTH));
+		
+		Element el = DOM.createElement("div");
+		el.setId(chartJS.getId() + DIV_ID_SUFFIX);
+		setElement(el);
+		
 		super.setId(chartJS.getId() + DIV_ID_SUFFIX);
 	}
 
@@ -152,11 +157,13 @@ public class HighChart extends BoxComponent {
 	}
 
 	@Override
-	protected final void onRender(final Element parent, final int index) {
+	protected final void onAfterFirstAttach() {
+		/*
 		Element el = DOM.createElement("div");
 		el.setId(chartJS.getId() + DIV_ID_SUFFIX);
-		setElement(el, parent, index);
-		super.onRender(parent, index);
+		setElement(el);
+		*/
+		super.onAfterFirstAttach();
 		this.chartJS.setDivId(this.getId());
 		this.chartJS.doRender();
 	}

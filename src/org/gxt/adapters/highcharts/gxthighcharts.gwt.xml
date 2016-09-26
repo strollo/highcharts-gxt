@@ -1,7 +1,7 @@
 <module>
 	<!-- Inherit the core Web Toolkit stuff. -->
 	<inherits name='com.google.gwt.user.User' />
-	<inherits name='com.extjs.gxt.ui.GXT' />
+	<inherits name='com.sencha.gxt.ui.GXT' />
 	
 	 <source path='codegen'/>
 	 <source path='widgets'/>
