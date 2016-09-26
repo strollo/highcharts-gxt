@@ -24,7 +24,7 @@ package org.adapters.highcharts.codegen.sections.options.types;
 
 /**
  * A raw string is used for options which string representation
- * must not be quoted.
+ * must not be quote.
  * For example it is useful for expressing functions to append
  * as handlers (e.g. formatter).
  * @author Daniele Strollo

@@ -20,63 +20,48 @@
  * @author <a href="mailto:daniele.strollo@gmail.com">Daniele Strollo</a>
  ***************************************************************************/
 
+
 package org.adapters.highcharts.gxt.widgets;
 
 import java.util.List;
 
 import org.adapters.highcharts.codegen.sections.options.OptionPath;
-import org.adapters.highcharts.codegen.sections.options.types.ChartType;
 import org.adapters.highcharts.codegen.types.HighChartJS;
 import org.adapters.highcharts.codegen.types.SeriesType;
 import org.adapters.highcharts.codegen.utils.IDGen;
-import org.adapters.highcharts.gxt.widgets.ext.HighStockUtils;
-
 import com.extjs.gxt.ui.client.widget.BoxComponent;
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Element;
-import com.google.gwt.user.client.Event.NativePreviewHandler;
 import com.google.gwt.user.client.Timer;
-import com.google.gwt.user.client.Event;
-import com.google.gwt.user.client.Event.NativePreviewEvent;
-import com.google.gwt.user.client.Window;
-import com.google.gwt.user.client.Window.ScrollEvent;
-import com.google.gwt.user.client.Window.ScrollHandler;
 
 /**
  * The wrapper of hicharts.
- * 
  * <pre>
  * // The id can be omitted, a random one will be assigned.
  * HighChart hc = new HighChart("mychart");
- * 
+ *
  * <b>// 1 - SET OPTIONS</b>
  * try {
  *   // manually set the title of the chart
- *   hc.setOption(new OptionPath("/title/text"), "My first chart");
- *   hc.setOption(new OptionPath("/chart/type"), "spline");
- *   // the credits
- *   hc.setOption(new OptionPath("/credits/enabled"), true);
- *   hc.setOption(new OptionPath("/credits/text"), "Sample of HighChart-GXT");
- *   hc.setOption(new OptionPath("/credits/href"), "http://sourceforge.net/projects/highcharts-gxt/");
+ *   hc.getSection(SectionKeys.SEC_TITLE).addRawOption("text: 'My first chart'");
+ *   hc.getSection(SectionKeys.SEC_CHART).addOption(AvailableSectionOptions.SEC_CHART_DEFAULT_SERIES_TYPE, ChartType.SPLINE);
+ *   // removes the credits
+ *   hc.getSection(SectionKeys.SEC_CREDITS).addOption(AvailableSectionOptions.SEC_CREDITS_ENABLED, false);
  *   // no decimals
- *   hc.setOption(new OptionPath("/xAxis/allowDecimals"), false);
- * 
- *   hc.setOption(new OptionPath("/yAxis/min"), 0);
- * 
- *   hc.setOption(new OptionPath("/xAxis/title/text"), "And the X axis");
- *  hc.setOption(new OptionPath("/yAxis/title/text"), "And the Y axis");
- * 
- *   hc.setOption(new OptionPath("/subtitle/text"), "the subtitle");
- * 
- *   // a not so clean way to manually set options.
- *   // a further usage of setOption on the same path /plotOptions will overwrite these values
- *   // use responsibly :P
- *   hc.setOption(new OptionPath("/plotOptions").addRawOption("spline:{ marker: { enabled:true, radius: 4, lineColor: '#666666', lineWidth: 1 } }");
+ *   hc.getSection(SectionKeys.SEC_XAXIS).addOption(AvailableSectionOptions.SEC_XAXIS_ALLOW_DECIMALS, false);
+ *
+ *   hc.getSection(SectionKeys.SEC_YAXIS).addOption(AvailableSectionOptions.SEC_YAXIS_MIN, 0);
+ *
+ *   ((SectionXAxis) hc.getSection(SectionKeys.SEC_XAXIS)).setTitle("And the X axis");
+ *   ((SectionYAxis) hc.getSection(SectionKeys.SEC_YAXIS)).setTitle("The Y is here");
+ *
+ *   hc.getSection(SectionKeys.SEC_SUBTITLE).addOption(AvailableSectionOptions.SEC_SUBTITLE_TEXT, "the subtitle");
+ *
+ *   hc.getSection(SectionKeys.SEC_PLOT_OPTIONS).addRawOption("spline:{ marker: { enabled:true, radius: 4, lineColor: '#666666', lineWidth: 1 } }");
  * } catch (Exception e) {
  * }
- * 
+ *
  * <b>// 2 - ADD VALUES (series)</b>
  * hc.addSeries(new SeriesType(
  *   "first line",
@@ -86,54 +71,20 @@ import com.google.gwt.user.client.Window.ScrollHandler;
  *   new SeriesType.SeriesDataEntry(78),
  *   new SeriesType.SeriesDataEntry(38)
  * ));
- * 
+ *
  * <b>// 3 - Graphical options (if needed).</b>
  * // no offset in the resize
  * hc.setHeightOffset(0);
  * // reduces the refresh delay from 1000 to 100.
  * hc.setResizeDelay(100);
  * // not applied if hc.setResizable(false)
- * 
+ *
  * <b>// 4 - done!!! (e.g. insert inside a gxt LayoutContainer)</b>
  * layoutContainer.add(hc);
  * </pre>
- * 
  * @author Daniele Strollo
  */
 public class HighChart extends BoxComponent {
-	public class SelectionRange {
-		public double minX;
-		public double maxX;
-		public double dataMinX;
-		public double dataMaxX;
-
-		public double minY;
-		public double maxY;
-		public double dataMinY;
-		public double dataMaxY;
-	}
-
-	/**
-	 * Diffent categories of highcharts have been defined from 2.x version.
-	 * There are: HighCharts and, additionally, the HighStock.
-	 * 
-	 * @author daniele
-	 * 
-	 */
-	public enum ChartCategory {
-		HIGHCHARTS("Chart"), HIGHSTOCK("StockChart");
-
-		private String jsName = null;
-
-		ChartCategory(String jsName) {
-			this.jsName = jsName;
-		}
-
-		public String getJSName() {
-			return this.jsName;
-		}
-	}
-
 	private static final Object SYNC_MONITOR = new Object();
 	private static final String DIV_ID_SUFFIX = "-frame";
 	private HighChartJS chartJS = null;
@@ -143,110 +94,76 @@ public class HighChart extends BoxComponent {
 	private boolean resizeOnWindow = false;
 	private String title = "Chart";
 	private boolean isRendered = false;
-	private ChartCategory category = null;
 
 	/**
-	 * If not id is passed from the user, a random one will be generated.
-	 * Usually this constructor is to be preferred since otherwise the developer
-	 * is responsible to assign unique identifiers to the charts.
+	 * If not id is passed from the user,
+	 * a random one will be generated.
+	 * Usually this constructor is to be preferred since
+	 * otherwise the developer is responsible to assign
+	 * unique identifiers to the charts.
 	 */
-	public HighChart(final ChartCategory category) {
-		this(category, IDGen.generateID(ID_LENGTH));
+	public HighChart() {
+		this(IDGen.generateID(ID_LENGTH));
 	}
 
 	/**
-	 * Creates a new highchart widget with a given id. If the id parameter is
-	 * null a random one will be assigned. The id of different charts must be
-	 * different otherwise the resize and other management functionalities are
-	 * not ensured to work well.
+	 * Creates a new highchart widget with a given id.
+	 * If the id parameter is null a random one will be assigned.
+	 * The id of different charts must be different otherwise the resize
+	 * and other management functionalities are not ensured to work well.
 	 */
-	public HighChart(final ChartCategory category, final String id) {
+	public HighChart(final String id) {
 		super();
 		this.setMonitorWindowResize(true);
-		this.category = category;
-		this.chartJS = new HighChartJS(category.getJSName(), (id != null) ? id
-				: IDGen.generateID(ID_LENGTH));
+		this.chartJS = new HighChartJS((id != null) ? id : IDGen.generateID(ID_LENGTH));
 		super.setId(chartJS.getId() + DIV_ID_SUFFIX);
 	}
 
-	public HighChart(final ChartCategory category, final String id,
-			final ChartType type) {
-		this(category, id);
-		this.setType(type.toString(), false);
+	public HighChart(final String id, final String type) {
+		this(id);
+		this.setType(type, false);
 	}
 
 	/**
-	 * @deprecated do not use this explicitly. The constructor will provide to
-	 *             properly set the id.
+	 * @deprecated do not use this explicitly.
+	 * The constructor will provide to properly set the id.
 	 */
 	public void setId(final String id) {
 		// avoids the setId - only the super method can be invoked internally.
 	}
 
 	/**
-	 * If needed to access the chart JS object it is needed its ID (typically of
-	 * the form 'chart' + ID where id is the auto-generated random string).
-	 * 
-	 * This ID can be useful to natively modify the chart. e.g.:
-	 * 
+	 * If needed to access the chart JS object it is needed
+	 * its ID (typically of the form 'chart' + ID where id
+	 * is the auto-generated random string).
+	 *
+	 * This ID can be useful to natively modify the chart.
+	 * e.g.:
 	 * <pre>
-	 * var theChart = $wnd.getChartById(chartId);
+	 * 	var theChart = $wnd.getChartById(chartId);
 	 * </pre>
 	 */
 	public final String getChartJSId() {
 		return "chart" + this.chartJS.getId();
 	}
 
-	public void registerMouseHandler() {
-		// observe mouse x and y
-		Event.addNativePreviewHandler(new NativePreviewHandler() {
-			public void onPreviewNativeEvent(NativePreviewEvent event) {
-				NativeEvent e = event.getNativeEvent();
-				int mouseX = 0;
-				int mouseY = 0;
-				String type = null;
-				type = e.getType();
-				mouseX = e.getClientX();
-				mouseY = e.getClientY();
-
-				// test
-				int wheel = e.getMouseWheelVelocityY();
-
-				// debug
-				System.out.println("x: " + mouseX + " y: " + mouseY
-						+ " wheel: " + wheel + " type: " + type);
-			}
-		});
-
-		// observe scroll event, so we can offset x and y for tooltip
-		Window.addWindowScrollHandler(new ScrollHandler() {
-			public void onWindowScroll(ScrollEvent event) {
-
-				int scrollLeft = event.getScrollLeft();
-				int scrollTop = event.getScrollTop();
-
-				// debug
-				System.out.println("scrollLeft: " + scrollLeft + " scrollTop: "
-						+ scrollTop);
-			}
-		});
-	}
-
 	/**
-	 * Gets the list of series to allow their low-level manipulation.
+	 * Gets the list of series to allow their low-level
+	 * manipulation.
 	 */
 	public final List<SeriesType> getSeriesList() {
 		return this.chartJS.getSeriesList();
 	}
 
 	/**
-	 * Used to dynamically change the type of a chart. It applies to the chart
-	 * the new type and re-inject the JS code inside the container.
+	 * Used to dynamically change the type of a chart.
+	 * It applies to the chart the new type and re-inject
+	 * the JS code inside the container.
 	 * <p>
-	 * This operation can require few seconds since the chart must be
-	 * re-generated, replaced in the JS block and resized.
+	 * This operation can require few seconds since the
+	 * chart must be re-generated, replaced in the JS block
+	 * and resized.
 	 * </p>
-	 * 
 	 * @param type
 	 */
 	public final void setType(final String type) {
@@ -254,24 +171,21 @@ public class HighChart extends BoxComponent {
 	}
 
 	/**
-	 * Similar to the {@link HighChart#setType(String)} with an additional
-	 * parameter. The propagate requires to apply this type to all series
-	 * currently attached to the chart. By default it is considered true.
-	 * 
+	 * Similar to the {@link HighChart#setType(String)} with an additional parameter.
+	 * The propagate requires to apply this type to all series currently attached to the chart.
+	 * By default it is considered true.
 	 * @param type
 	 * @param propagate
 	 */
 	public final void setType(final String type, boolean propagate) {
-		if (type != null) {
-			this.setType(type, true, propagate);
-		}
+		this.setType(type, true, propagate);
 	}
 
 	/**
-	 * Re-applies the injection of JS inside its container. It can be used in
-	 * some critic chart modifications (e.g. the axis inversion) that will
-	 * require the explicit re-injection of the JS code inside the container.
-	 * 
+	 * Re-applies the injection of JS inside its container.
+	 * It can be used in some critic chart modifications
+	 * (e.g. the axis inversion) that will require the explicit
+	 * re-injection of the JS code inside the container.
 	 * @deprecated discouraged use. For internal use only.
 	 */
 	public final void injectJS() {
@@ -279,33 +193,12 @@ public class HighChart extends BoxComponent {
 	}
 
 	/**
-	 * This method force the refresh of a chart after its resize.
-	 * It is needed by highstock chart since their size is recalculated
-	 * after parent container resize.
-	 */
-	private void forceRefresh() {
-		synchronized (SYNC_MONITOR) {
-			try {
-				// ensures the highchartsJS is rendered
-				// only once its container is present and rendered.
-				if (this.isRendered) {
-					this.chartJS.doRender();
-				}
-			} catch (Exception e) {
-				GWT.log("During setType", e);
-			}
-		}
-	}
-
-	/**
 	 * Modifies the type of a chart and, if required to reload the JS, re-inject
 	 * its JS code inside the container.
-	 * 
 	 * @param type
 	 * @param reloadJS
 	 */
-	private void setType(final String type, final boolean reloadJS,
-			final boolean propagate) {
+	private void setType(final String type, final boolean reloadJS, final boolean propagate) {
 		synchronized (SYNC_MONITOR) {
 			try {
 				this.setOption(new OptionPath("/chart/defaultSeriesType"), type);
@@ -326,8 +219,8 @@ public class HighChart extends BoxComponent {
 	}
 
 	/**
-	 * The first time a chart is shown this method will be invoked. Basically it
-	 * applies the resize of the chart.
+	 * The first time a chart is shown this method will be
+	 * invoked. Basically it applies the resize of the chart.
 	 */
 	@Override
 	protected final void onShow() {
@@ -338,8 +231,9 @@ public class HighChart extends BoxComponent {
 	}
 
 	/**
-	 * Creation at GWT phase of the chart. This method is responsible to create
-	 * an additional div in which the charted will be encapsulated.
+	 * Creation at GWT phase of the chart.
+	 * This method is responsible to create an additional div in which the
+	 * charted will be encapsulated.
 	 */
 	@Override
 	protected final void onRender(final Element parent, final int index) {
@@ -353,11 +247,10 @@ public class HighChart extends BoxComponent {
 	}
 
 	/**
-	 * The delay to wait before applying the auto resize to the chart. It is
-	 * suggested to use a value greater than 100 (also 1000 is suggested) since
-	 * the resize must be applied only after it has been handled by parent GWT
-	 * components.
-	 * 
+	 * The delay to wait before applying the auto resize to the chart.
+	 * It is suggested to use a value greater than 100 (also 1000 is suggested)
+	 * since the resize must be applied only after it has been handled by parent
+	 * GWT components.
 	 * @param mills
 	 */
 	public final void setResizeDelay(final int mills) {
@@ -365,9 +258,10 @@ public class HighChart extends BoxComponent {
 	}
 
 	/**
-	 * Propagates the resize event to the encapsulated chart. The resize will be
-	 * applied only if the autoResize flag is true and if the resizeOnWindow is
-	 * false, otherwise the {@link HighChart#onWindowResize(int, int)} is used.
+	 * Propagates the resize event to the encapsulated chart.
+	 * The resize will be applied only if the autoResize flag is true
+	 * and if the resizeOnWindow is false,
+	 * otherwise the {@link HighChart#onWindowResize(int, int)} is used.
 	 */
 	@Override
 	protected final void onResize(final int width, final int height) {
@@ -375,18 +269,16 @@ public class HighChart extends BoxComponent {
 		if (this.autoResize && !resizeOnWindow) {
 			this.applyResize();
 		}
-		if (this.category == ChartCategory.HIGHSTOCK) {
-			this.forceRefresh();
-		}
 	}
 
 	public final void followWindowResize(final boolean resizeOnWindow) {
 		this.resizeOnWindow = resizeOnWindow;
 	}
 
+
 	/**
-	 * If the chart has autoResize flag enabled, and resizeOnWindow is true this
-	 * method is invoked (otherwise the {@link HighChart#onResize(int, int)}
+	 * If the chart has autoResize flag enabled, and resizeOnWindow is true
+	 * this method is invoked (otherwise the  {@link HighChart#onResize(int, int)}
 	 * will be used).
 	 */
 	@Override
@@ -398,17 +290,17 @@ public class HighChart extends BoxComponent {
 	}
 
 	/**
-	 * This method is needed when the autoResize is disabled and demanded to the
-	 * container itself.
+	 * This method is needed when the autoResize is disabled
+	 * and demanded to the container itself.
 	 */
 	public final void doResize() {
 		applyResize();
 	}
 
 	/**
-	 * Internally applies the delayed resize on the JS native chart. The delay
-	 * can be changed by invoking the {@link HighChart#setResizeDelay(int)}
-	 * method.
+	 * Internally applies the delayed resize on the JS native chart.
+	 * The delay can be changed by invoking the
+	 * {@link HighChart#setResizeDelay(int)} method.
 	 */
 	private void applyResize() {
 		// delayed refresh of chart
@@ -431,8 +323,7 @@ public class HighChart extends BoxComponent {
 			try {
 				this.title = title.trim();
 				this.setOption(new OptionPath("/title/text"), title);
-			} catch (Exception e) {
-			}
+			} catch (Exception e) {}
 		}
 	}
 
@@ -442,7 +333,6 @@ public class HighChart extends BoxComponent {
 
 	/**
 	 * Adds a series (data) to a chart.
-	 * 
 	 * @param series
 	 */
 	public final void addSeries(final SeriesType series) {
@@ -456,17 +346,12 @@ public class HighChart extends BoxComponent {
 
 	/**
 	 * 
-	 * @param path
-	 *            the full path of the option to set (e.g. /chart/renderTo).
-	 * @param option
-	 *            the value to assign. Artifacts for generally used parameters
-	 *            are given in
-	 *            {@link org.adapters.highcharts.codegen.sections.options.types}
-	 *            .
+	 * @param path the full path of the option to set (e.g. /chart/renderTo).
+	 * @param option the value to assign. Artifacts for generally used parameters are 
+	 * given in {@link org.adapters.highcharts.codegen.sections.options.types}.
 	 * @throws Exception
 	 */
-	public final void setOption(final OptionPath path, final Object option)
-			throws Exception {
+	public final void setOption(final OptionPath path, final Object option) throws Exception {
 		this.chartJS.getOptionManager().setOption(path, option);
 	}
 
@@ -481,15 +366,13 @@ public class HighChart extends BoxComponent {
 	public final void setWidth(final int width) {
 		this.chartJS.setWidth(width);
 	}
-
 	public final void setHeight(final int height) {
 		this.chartJS.setHeight(height);
 	}
-
+	
 	/**
 	 * The offset to use when recalculating the width of a chart during its
 	 * resize.
-	 * 
 	 * @param widthOffset
 	 */
 	public final void setWidthOffset(final int widthOffset) {
@@ -499,30 +382,9 @@ public class HighChart extends BoxComponent {
 	/**
 	 * The offset to use when recalculating the height of a chart during its
 	 * resize.
-	 * 
 	 * @param heightOffset
 	 */
 	public final void setHeightOffset(final int heightOffset) {
 		this.chartJS.setHeightOffset(heightOffset);
-	}
-
-	/**
-	 * Used to retrieve the extremes of a selection in a HighStock chart.
-	 * 
-	 * @return
-	 */
-	public final SelectionRange getExtremes() {
-		SelectionRange retval = new SelectionRange();
-		retval.minX = HighStockUtils.getXAxisMin(this.getChartJSId());
-		retval.maxX = HighStockUtils.getXAxisMax(this.getChartJSId());
-		retval.dataMinX = HighStockUtils.getXAxisDataMin(this.getChartJSId());
-		retval.dataMaxX = HighStockUtils.getXAxisDataMax(this.getChartJSId());
-
-		retval.minY = HighStockUtils.getYAxisMin(this.getChartJSId());
-		retval.maxY = HighStockUtils.getYAxisMax(this.getChartJSId());
-		retval.dataMinY = HighStockUtils.getYAxisDataMin(this.getChartJSId());
-		retval.dataMaxY = HighStockUtils.getYAxisDataMax(this.getChartJSId());
-
-		return retval;
 	}
 }

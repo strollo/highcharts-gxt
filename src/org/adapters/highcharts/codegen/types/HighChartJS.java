@@ -24,11 +24,13 @@ package org.adapters.highcharts.codegen.types;
 
 import java.util.List;
 import java.util.Vector;
+
 import org.adapters.highcharts.codegen.sections.OptionManager;
 import org.adapters.highcharts.codegen.sections.options.OptionPath;
 import org.adapters.highcharts.codegen.sections.options.types.RawStringType;
 import org.adapters.highcharts.codegen.utils.ClientConsole;
 import org.adapters.highcharts.codegen.utils.StringUtils;
+
 /**
  * Artifact for wrapping highcharts javascript objects inside java objects.
  * Through this class it is possible to generate the javascript code that
@@ -45,17 +47,11 @@ public class HighChartJS {
 	private boolean autoResize = true;
 	private int width = 400;
 	private int height = 200;
-	private String categoryJS = null;
-	
-	/**
-	 * @param categoryJS the string to use for JS to generate highcharts or highstocks
-	 * @param id an assigned or auto-generated identifier for the chart container
-	 */
-	public HighChartJS(final String categoryJS, final String id) {
+
+	public HighChartJS(final String id) {
 		if (id != null) {
 			this.id = id.trim();
 		}
-		this.categoryJS = categoryJS;
 	}
 
 	public final void setAutoResize(boolean autoResize) {
@@ -96,7 +92,7 @@ public class HighChartJS {
 
 	public final String getJS() {
 		StringBuilder retval = new StringBuilder();
-		retval.append("var " + this.getJSChartName() + " = new $wnd.Highcharts." + this.categoryJS + "({" + StringUtils.NEW_LINE);
+		retval.append("var " + this.getJSChartName() + " = new $wnd.Highcharts.Chart({" + StringUtils.NEW_LINE);
 
 		// THE OPTIONS
 		try {
