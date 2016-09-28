@@ -7,5 +7,5 @@ GXT/GWT wrappers for Highcharts-JS
 http://highcharts-gxt.sourceforge.net/wordpress/
 
 > New documentation wiki:
-[[wiki]]
+https://github.com/strollo/highcharts-gxt/wiki
 
