@@ -38,3 +38,4 @@ Here is used the Highcharts license that is not free for commercial use.
 If your software is intended for commercial use, you need to activate
 Highcharts in your application. Please refer to:
 http://highcharts.com/license
+
