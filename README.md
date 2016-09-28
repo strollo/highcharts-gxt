@@ -3,6 +3,9 @@ highcharts-gxt
 
 GXT/GWT wrappers for Highcharts-JS
 
-Documentation available at:
+> Old documentation available at:
 http://highcharts-gxt.sourceforge.net/wordpress/
+
+> New documentation wiki:
+[[wiki]]
 
