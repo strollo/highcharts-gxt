@@ -22,6 +22,7 @@
 
 package org.gxt.adapters.highcharts.widgets.ext.plugins.impl;
 
+import org.gxt.adapters.highcharts.codegen.sections.options.OptionPath;
 import org.gxt.adapters.highcharts.codegen.sections.options.types.ChartType;
 import org.gxt.adapters.highcharts.widgets.ext.plugins.ChartFramePlugin;
 import com.google.gwt.dom.client.NativeEvent;
@@ -40,7 +41,19 @@ public class PlgSetChartType extends ChartFramePlugin {
 	
 	@Override
 	protected void doTask(NativeEvent be) {
-		getChart().setType(type.toString());
+		String typeStr = this.type.toString();
+		
+		// The radar chart has an optional field polar to set
+		try {
+			if (typeStr.equals("radar")) { 
+				getChart().setOption(new OptionPath("/chart/polar"), true);
+				typeStr = "line";
+			}
+			else {		
+				getChart().removeOption(new OptionPath("/chart/polar"));
+			}
+		} catch (Exception e) {}
+		getChart().setType(typeStr);
 	}
 
 }

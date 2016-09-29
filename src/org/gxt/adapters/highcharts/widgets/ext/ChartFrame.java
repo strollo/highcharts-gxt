@@ -226,6 +226,7 @@ public class ChartFrame extends ContentPanel {
 			this.addPlugin("Change Type", new PlgSetChartType(new ChartType("spline")));
 			this.addPlugin("Change Type", new PlgSetChartType(new ChartType("areaspline")));
 			this.addPlugin("Change Type", new PlgSetChartType(new ChartType("column")));
+			this.addPlugin("Change Type", new PlgSetChartType(new ChartType("radar")));
 			
 			this.addPlugin("Refresh", new PlgRefreshChart());
 

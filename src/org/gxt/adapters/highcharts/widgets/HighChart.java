@@ -349,6 +349,7 @@ public class HighChart extends Component {
 		super.onAfterFirstAttach();
 		this.chartJS.setDivId(this.getId());
 		this.chartJS.doRender();
+		this.isRendered = true;
 	}
 
 	/**
